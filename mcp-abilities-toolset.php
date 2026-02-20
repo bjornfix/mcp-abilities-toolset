@@ -162,34 +162,40 @@ function mcp_toolset_get_post_type_fields( string $post_type ): array {
 	$fields = array();
 	$definitions = mcp_toolset_get_field_definitions();
 
-	$groups = get_posts(
-		array(
-			'post_type'      => 'wp-types-group',
-			'posts_per_page' => -1,
-			'post_status'    => array( 'publish', 'draft', 'private' ),
-		)
-	);
+	$page = 1;
+	do {
+		$groups = get_posts(
+			array(
+				'post_type'      => 'wp-types-group',
+				'posts_per_page' => 200,
+				'paged'          => $page,
+				'post_status'    => array( 'publish', 'draft', 'private' ),
+				'no_found_rows'  => true,
+			)
+		);
 
-	foreach ( $groups as $group ) {
-		$post_types = mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_post_types', true ) );
-		if ( ! in_array( $post_type, $post_types, true ) ) {
-			continue;
-		}
-		$field_slugs = mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_fields', true ) );
-		foreach ( $field_slugs as $slug ) {
-			$def = $definitions[ $slug ] ?? array();
-			$label = $def['name'] ?? $slug;
-			if ( empty( $def['name'] ) && isset( $def['data'] ) && is_array( $def['data'] ) && ! empty( $def['data']['title'] ) ) {
-				$label = $def['data']['title'];
+		foreach ( $groups as $group ) {
+			$post_types = mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_post_types', true ) );
+			if ( ! in_array( $post_type, $post_types, true ) ) {
+				continue;
 			}
-			$fields[] = array(
-				'name'          => $slug,
-				'label'         => $label,
-				'type'          => $def['type'] ?? 'text',
-				'is_repeatable' => $def['repeatable'] ?? false,
-			);
+			$field_slugs = mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_fields', true ) );
+			foreach ( $field_slugs as $slug ) {
+				$def = $definitions[ $slug ] ?? array();
+				$label = $def['name'] ?? $slug;
+				if ( empty( $def['name'] ) && isset( $def['data'] ) && is_array( $def['data'] ) && ! empty( $def['data']['title'] ) ) {
+					$label = $def['data']['title'];
+				}
+				$fields[] = array(
+					'name'          => $slug,
+					'label'         => $label,
+					'type'          => $def['type'] ?? 'text',
+					'is_repeatable' => $def['repeatable'] ?? false,
+				);
+			}
 		}
-	}
+		$page++;
+	} while ( ! empty( $groups ) );
 
 	$cache[ $post_type ] = $fields;
 	return $fields;
@@ -762,7 +768,7 @@ wp_register_ability(
 				),
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'    => array( 'type' => 'boolean' ),
 					'post_types' => array( 'type' => 'array' ),
@@ -814,7 +820,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'fields'  => array( 'type' => 'array' ),
@@ -870,7 +876,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'    => array( 'type' => 'boolean' ),
 					'taxonomies' => array( 'type' => 'array' ),
@@ -942,7 +948,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'   => array( 'type' => 'boolean' ),
 					'post_id'   => array( 'type' => 'integer' ),
@@ -1002,7 +1008,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'      => array( 'type' => 'boolean' ),
 					'id'           => array( 'type' => 'integer' ),
@@ -1101,7 +1107,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'posts'   => array( 'type' => 'array' ),
@@ -1174,7 +1180,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'   => array( 'type' => 'boolean' ),
 					'post_id'   => array( 'type' => 'integer' ),
@@ -1230,7 +1236,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'message' => array( 'type' => 'string' ),
@@ -1273,7 +1279,7 @@ wp_register_ability(
 				'minProperties' => 0,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'fields'  => array( 'type' => 'array' ),
@@ -1340,7 +1346,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'      => array( 'type' => 'boolean' ),
 					'id'           => array( 'type' => 'integer' ),
@@ -1427,7 +1433,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'users'   => array( 'type' => 'array' ),
@@ -1495,7 +1501,7 @@ wp_register_ability(
 				'minProperties' => 0,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'roles'   => array( 'type' => 'array' ),
@@ -1559,7 +1565,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'      => array( 'type' => 'boolean' ),
 					'role'         => array( 'type' => 'string' ),
@@ -1628,7 +1634,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success'      => array( 'type' => 'boolean' ),
 					'relationships' => array( 'type' => 'array' ),
@@ -1721,7 +1727,7 @@ wp_register_ability(
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
-				'name' => 'object',
+				'type' => 'object',
 				'properties' => array(
 					'success' => array( 'type' => 'boolean' ),
 					'forms'   => array( 'type' => 'array' ),
@@ -1793,7 +1799,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'     => array( 'type' => 'boolean' ),
 				'taxonomies'  => array( 'type' => 'array' ),
@@ -1858,7 +1864,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'terms'   => array( 'type' => 'array' ),
@@ -1942,7 +1948,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'   => array( 'type' => 'boolean' ),
 				'term_id'   => array( 'type' => 'integer' ),
@@ -2012,7 +2018,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'config'  => array( 'type' => 'object' ),
@@ -2091,7 +2097,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
@@ -2162,7 +2168,7 @@ wp_register_ability(
 		'additionalProperties' => false,
 	),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'views'   => array( 'type' => 'array' ),
@@ -2227,21 +2233,25 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'       => array( 'type' => 'boolean' ),
 				'relationships' => array( 'type' => 'array' ),
 				'message'       => array( 'type' => 'string' ),
 			),
 		),
-		'execute_callback'    => function ( array $input = array() ): array {
-			if ( empty( $input['post_id'] ) ) {
-				return array( 'success' => false, 'message' => 'post_id is required.' );
-			}
-			$relationships = array();
-			// Check if Types relationships are active.
-			if ( function_exists( 'types_get_relationships' ) ) {
-				$post_relationships = get_post_meta( $input['post_id'], '_wpcf_belongs', true );
+			'execute_callback'    => function ( array $input = array() ): array {
+				if ( empty( $input['post_id'] ) ) {
+					return array( 'success' => false, 'message' => 'post_id is required.' );
+				}
+				$post_id = (int) $input['post_id'];
+				if ( ! current_user_can( 'edit_post', $post_id ) ) {
+					return array( 'success' => false, 'message' => 'You do not have permission to inspect relationships for this post.' );
+				}
+				$relationships = array();
+				// Check if Types relationships are active.
+				if ( function_exists( 'types_get_relationships' ) ) {
+					$post_relationships = get_post_meta( $post_id, '_wpcf_belongs', true );
 				if ( ! empty( $post_relationships ) && is_array( $post_relationships ) ) {
 					foreach ( $post_relationships as $relationship => $parent_id ) {
 						$relationships[] = array(
@@ -2261,10 +2271,10 @@ wp_register_ability(
 				'relationships' => $relationships,
 				'message'       => 'Retrieved ' . count( $relationships ) . ' relationships.',
 			);
-		},
-		'permission_callback' => function (): bool {
-			return current_user_can( 'edit_post', $input['post_id'] ?? 0 );
-		},
+			},
+			'permission_callback' => function (): bool {
+				return current_user_can( 'edit_posts' );
+			},
 		'meta'                => array(
 			'annotations' => array(
 				'readonly'    => true,
@@ -2308,7 +2318,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'users'   => array( 'type' => 'array' ),
@@ -2417,7 +2427,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'posts'   => array( 'type' => 'array' ),
@@ -2551,7 +2561,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'   => array( 'type' => 'boolean' ),
 				'message'   => array( 'type' => 'string' ),
@@ -2713,7 +2723,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'   => array( 'type' => 'boolean' ),
 				'message'   => array( 'type' => 'string' ),
@@ -2855,7 +2865,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'   => array( 'type' => 'boolean' ),
 				'message'   => array( 'type' => 'string' ),
@@ -2939,7 +2949,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'  => array( 'type' => 'boolean' ),
 				'message'  => array( 'type' => 'string' ),
@@ -3023,7 +3033,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name'       => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'groups'  => array( 'type' => 'array' ),
@@ -3032,30 +3042,36 @@ wp_register_ability(
 		),
 		'execute_callback'    => function ( array $input = array() ): array {
 			$filter = sanitize_key( $input['post_type'] ?? '' );
-			$groups = get_posts(
-				array(
-					'post_type'      => 'wp-types-group',
-					'posts_per_page' => -1,
-					'post_status'    => array( 'publish', 'draft', 'private' ),
-				)
-			);
+				$items = array();
+				$page = 1;
+				do {
+					$groups = get_posts(
+						array(
+							'post_type'      => 'wp-types-group',
+							'posts_per_page' => 200,
+							'paged'          => $page,
+							'post_status'    => array( 'publish', 'draft', 'private' ),
+							'no_found_rows'  => true,
+						)
+					);
 
-			$items = array();
-			foreach ( $groups as $group ) {
-				$post_types = mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_post_types', true ) );
-				if ( $filter && ! in_array( $filter, $post_types, true ) ) {
-					continue;
-				}
-				$items[] = array(
-					'id'         => $group->ID,
-					'slug'       => $group->post_name,
-					'title'      => $group->post_title,
-					'post_types' => $post_types,
-					'fields'     => mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_fields', true ) ),
-					'taxonomies' => mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_taxonomies', true ) ),
-					'edit_link'  => admin_url( 'post.php?post=' . $group->ID . '&action=edit' ),
-				);
-			}
+					foreach ( $groups as $group ) {
+						$post_types = mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_post_types', true ) );
+						if ( $filter && ! in_array( $filter, $post_types, true ) ) {
+							continue;
+						}
+						$items[] = array(
+							'id'         => $group->ID,
+							'slug'       => $group->post_name,
+							'title'      => $group->post_title,
+							'post_types' => $post_types,
+							'fields'     => mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_fields', true ) ),
+							'taxonomies' => mcp_toolset_parse_group_list( get_post_meta( $group->ID, '_wp_types_group_taxonomies', true ) ),
+							'edit_link'  => admin_url( 'post.php?post=' . $group->ID . '&action=edit' ),
+						);
+					}
+					$page++;
+				} while ( ! empty( $groups ) );
 
 			return array(
 				'success' => true,
@@ -3122,7 +3138,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name'       => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
@@ -3256,7 +3272,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
@@ -3388,7 +3404,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
@@ -3467,7 +3483,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
@@ -3540,7 +3556,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
@@ -3622,7 +3638,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'      => array( 'type' => 'boolean' ),
 				'has_access'   => array( 'type' => 'boolean' ),
@@ -3692,7 +3708,7 @@ wp_register_ability(
 			'minProperties' => 0,
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'      => array( 'type' => 'boolean' ),
 				'message'      => array( 'type' => 'string' ),
@@ -3783,7 +3799,7 @@ wp_register_ability(
 			),
 		),
 		'output_schema'       => array(
-			'name' => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success'  => array( 'type' => 'boolean' ),
 				'message'  => array( 'type' => 'string' ),
@@ -3839,7 +3855,7 @@ wp_register_ability(
 			'additionalProperties' => false,
 		),
 		'output_schema'       => array(
-			'name'       => 'object',
+			'type' => 'object',
 			'properties' => array(
 				'success' => array( 'type' => 'boolean' ),
 				'message' => array( 'type' => 'string' ),
