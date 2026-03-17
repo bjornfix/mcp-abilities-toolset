@@ -15,7 +15,24 @@ Toolset integration for WordPress via MCP.
 
 This add-on plugin exposes Toolset capabilities through MCP (Model Context Protocol). Your AI assistant can manage post types, custom fields, taxonomies, terms, relationships, and Toolset-driven content workflows.
 
-**Part of the [MCP Expose Abilities](https://devenia.com/plugins/mcp-expose-abilities/) ecosystem.**
+**Part of the [MCP Expose Abilities](https://github.com/bjornfix/mcp-expose-abilities) ecosystem.**
+
+This is one piece of a bigger open WordPress automation stack that lets AI agents work with structured content systems instead of leaving that work trapped in complex admin UIs.
+
+## Why This Is Cool
+
+Toolset sites tend to be powerful and annoying at the same time. The content model is valuable, but editing and maintenance can become a slog.
+
+This add-on lets you tell the agent to inspect the model, understand the fields and relationships, and then make the right structured change without a slow manual tour through Toolset screens.
+
+## Documentation
+
+- [Core Plugin: MCP Expose Abilities](https://github.com/bjornfix/mcp-expose-abilities)
+- [MCP Wiki Home](https://github.com/bjornfix/mcp-expose-abilities/wiki)
+- [Why Teams Use It](https://github.com/bjornfix/mcp-expose-abilities/wiki/Why-Teams-Use-It)
+- [Use Cases](https://github.com/bjornfix/mcp-expose-abilities/wiki/Use-Cases)
+- [Toolset Add-On Guide](https://github.com/bjornfix/mcp-expose-abilities/wiki/Addon-Toolset)
+- [Getting Started](https://github.com/bjornfix/mcp-expose-abilities/wiki/Getting-Started)
 
 ## Requirements
 
@@ -135,8 +152,19 @@ GPL-2.0+
 
 [Devenia](https://devenia.com) - We've been doing SEO and web development since 1993.
 
+## Free and Open
+
+Like the rest of the ecosystem, this add-on is free for all, completely open source, and meant to be used, studied, and extended.
+
+## Star and Share
+
+If this add-on helps, please star the repo, share the ecosystem, and point people to the main wiki:
+
+- https://github.com/bjornfix/mcp-expose-abilities
+- https://github.com/bjornfix/mcp-expose-abilities/wiki
+
 ## Links
 
-- [Plugin Page](https://devenia.com/plugins/mcp-expose-abilities/)
 - [Core Plugin (MCP Expose Abilities)](https://github.com/bjornfix/mcp-expose-abilities)
-- [All Add-on Plugins](https://devenia.com/plugins/mcp-expose-abilities/#add-ons)
+- [Main Wiki](https://github.com/bjornfix/mcp-expose-abilities/wiki)
+- [Toolset Add-On Guide](https://github.com/bjornfix/mcp-expose-abilities/wiki/Addon-Toolset)
