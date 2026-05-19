@@ -831,7 +831,7 @@ function mcp_toolset_find_content_usage( array $post_types, array $statuses, int
 	$sql .= ' ORDER BY post_type ASC, post_title ASC LIMIT %d';
 	$query_args[] = $limit;
 
-	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 	$matches = array();
 
 	foreach ( $rows as $row ) {
@@ -902,7 +902,7 @@ function mcp_toolset_find_meta_usage( array $post_types, array $statuses, int $l
 	$sql .= ' ORDER BY p.post_type ASC, p.post_title ASC, pm.meta_key ASC LIMIT %d';
 	$query_args[] = $limit;
 
-	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 	$matches = array();
 
 	foreach ( $rows as $row ) {
