@@ -6,7 +6,7 @@ Toolset integration for WordPress via MCP.
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 
 **Tested up to:** 6.9
-**Stable tag:** 1.0.1
+**Stable tag:** 1.0.2
 **Requires PHP:** 8.0
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
@@ -49,7 +49,7 @@ This add-on lets you tell the agent to inspect the model, understand the fields 
 3. Upload via WordPress Admin > Plugins > Add New > Upload Plugin
 4. Activate the plugin
 
-## Abilities (38)
+## Abilities (39)
 
 | Ability | Description |
 |---------|-------------|
@@ -91,6 +91,7 @@ This add-on lets you tell the agent to inspect the model, understand the fields 
 | `toolset/get-user-capabilities` | Get user capabilities |
 | `toolset/update-field` | Update field definition |
 | `toolset/get-field` | Get field definition |
+| `toolset/audit-usage` | Audit pages, posts, and Toolset objects for active Toolset usage |
 
 ## Usage Examples
 
@@ -133,6 +134,9 @@ This add-on lets you tell the agent to inspect the model, understand the fields 
 ```
 
 ## Changelog
+
+### 1.0.2
+- Added: `toolset/audit-usage` read-only ability to find posts/pages with Toolset blocks, shortcodes, fields, Views/templates, and Toolset configuration objects
 
 ### 1.0.1
 - Fixed: Removed hard plugin header dependency on abilities-api to avoid slug-mismatch activation blocking

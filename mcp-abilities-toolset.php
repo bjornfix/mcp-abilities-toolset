@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Toolset
  * Plugin URI: https://github.com/bjornfix/mcp-abilities-toolset
  * Description: Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -739,6 +739,254 @@ function mcp_toolset_delete_post( int $post_id, bool $force = false ): array {
 	return array(
 		'success' => true,
 		'message' => $force ? 'Post permanently deleted.' : 'Post moved to trash.',
+	);
+}
+
+/**
+ * Get markers used to detect Toolset usage in post content.
+ */
+function mcp_toolset_get_usage_content_markers(): array {
+	return array(
+		'toolset_string'             => 'toolset',
+		'toolset_block'              => 'wp:toolset',
+		'toolset_blocks_namespace'   => 'toolset-blocks',
+		'views_shortcode'            => '[wpv-',
+		'types_shortcode'            => '[types ',
+		'views_block_or_reference'   => 'wpv-view',
+		'wpcf_field_reference'       => 'wpcf-',
+		'toolset_dynamic_source_ref' => 'toolset_dynamic',
+	);
+}
+
+/**
+ * Sanitize audit post statuses.
+ */
+function mcp_toolset_sanitize_audit_statuses( $statuses ): array {
+	$allowed = array( 'publish', 'draft', 'private', 'pending', 'future' );
+	$statuses = is_array( $statuses ) ? $statuses : array();
+	$statuses = array_values( array_intersect( array_map( 'sanitize_key', $statuses ), $allowed ) );
+	return ! empty( $statuses ) ? $statuses : array( 'publish' );
+}
+
+/**
+ * Sanitize audit post types.
+ */
+function mcp_toolset_sanitize_audit_post_types( $post_types ): array {
+	if ( ! is_array( $post_types ) ) {
+		return array();
+	}
+
+	$clean = array();
+	foreach ( $post_types as $post_type ) {
+		$post_type = sanitize_key( (string) $post_type );
+		if ( post_type_exists( $post_type ) ) {
+			$clean[] = $post_type;
+		}
+	}
+
+	return array_values( array_unique( $clean ) );
+}
+
+/**
+ * Format a post row for Toolset usage reports.
+ */
+function mcp_toolset_format_usage_post( int $post_id, string $post_type, string $status, array $extra = array() ): array {
+	return array_merge(
+		array(
+			'id'     => $post_id,
+			'title'  => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES ),
+			'type'   => $post_type,
+			'status' => $status,
+			'url'    => get_permalink( $post_id ),
+		),
+		$extra
+	);
+}
+
+/**
+ * Find posts/pages with Toolset markers in post_content.
+ */
+function mcp_toolset_find_content_usage( array $post_types, array $statuses, int $limit ): array {
+	global $wpdb;
+
+	$markers = mcp_toolset_get_usage_content_markers();
+	$where_parts = array();
+	$args = array();
+
+	foreach ( $markers as $marker ) {
+		$where_parts[] = 'LOWER(post_content) LIKE LOWER(%s)';
+		$args[] = '%' . $wpdb->esc_like( $marker ) . '%';
+	}
+
+	$status_placeholders = implode( ',', array_fill( 0, count( $statuses ), '%s' ) );
+	$sql = "SELECT ID, post_type, post_status, post_content FROM {$wpdb->posts} WHERE post_status IN ($status_placeholders) AND post_type NOT IN ('revision', 'nav_menu_item', 'attachment') AND (" . implode( ' OR ', $where_parts ) . ')';
+	$query_args = array_merge( $statuses, $args );
+
+	if ( ! empty( $post_types ) ) {
+		$post_type_placeholders = implode( ',', array_fill( 0, count( $post_types ), '%s' ) );
+		$sql .= " AND post_type IN ($post_type_placeholders)";
+		$query_args = array_merge( $query_args, $post_types );
+	}
+
+	$sql .= ' ORDER BY post_type ASC, post_title ASC LIMIT %d';
+	$query_args[] = $limit;
+
+	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$matches = array();
+
+	foreach ( $rows as $row ) {
+		$lower_content = strtolower( (string) $row['post_content'] );
+		$found_markers = array();
+
+		foreach ( $markers as $label => $marker ) {
+			if ( false !== strpos( $lower_content, strtolower( $marker ) ) ) {
+				$found_markers[] = $label;
+			}
+		}
+
+		$matches[] = mcp_toolset_format_usage_post(
+			(int) $row['ID'],
+			(string) $row['post_type'],
+			(string) $row['post_status'],
+			array( 'markers' => $found_markers )
+		);
+	}
+
+	return $matches;
+}
+
+/**
+ * Find posts/pages with Toolset-related post meta.
+ */
+function mcp_toolset_find_meta_usage( array $post_types, array $statuses, int $limit ): array {
+	global $wpdb;
+
+	$status_placeholders = implode( ',', array_fill( 0, count( $statuses ), '%s' ) );
+	$query_args = $statuses;
+	$sql = "SELECT p.ID, p.post_type, p.post_status, pm.meta_key, LEFT(CAST(pm.meta_value AS CHAR), 180) AS sample
+		FROM {$wpdb->postmeta} pm
+		JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+		WHERE p.post_status IN ($status_placeholders)
+			AND p.post_type NOT IN ('revision', 'nav_menu_item', 'attachment')
+			AND (
+				pm.meta_key = %s
+				OR pm.meta_key LIKE %s
+				OR pm.meta_key LIKE %s
+				OR pm.meta_key LIKE %s
+				OR pm.meta_key LIKE %s
+				OR CAST(pm.meta_value AS CHAR) LIKE %s
+				OR CAST(pm.meta_value AS CHAR) LIKE %s
+				OR CAST(pm.meta_value AS CHAR) LIKE %s
+			)";
+
+	$query_args = array_merge(
+		$query_args,
+		array(
+			'_views_template',
+			$wpdb->esc_like( 'wpcf-' ) . '%',
+			$wpdb->esc_like( '_wpcf' ) . '%',
+			$wpdb->esc_like( '_wpv' ) . '%',
+			$wpdb->esc_like( '_toolset' ) . '%',
+			'%' . $wpdb->esc_like( 'toolset' ) . '%',
+			'%' . $wpdb->esc_like( 'wpv-' ) . '%',
+			'%' . $wpdb->esc_like( 'wpcf-' ) . '%',
+		)
+	);
+
+	if ( ! empty( $post_types ) ) {
+		$post_type_placeholders = implode( ',', array_fill( 0, count( $post_types ), '%s' ) );
+		$sql .= " AND p.post_type IN ($post_type_placeholders)";
+		$query_args = array_merge( $query_args, $post_types );
+	}
+
+	$sql .= ' ORDER BY p.post_type ASC, p.post_title ASC, pm.meta_key ASC LIMIT %d';
+	$query_args[] = $limit;
+
+	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$matches = array();
+
+	foreach ( $rows as $row ) {
+		$post_id = (int) $row['ID'];
+		if ( ! isset( $matches[ $post_id ] ) ) {
+			$matches[ $post_id ] = mcp_toolset_format_usage_post(
+				$post_id,
+				(string) $row['post_type'],
+				(string) $row['post_status'],
+				array( 'meta' => array() )
+			);
+		}
+
+		$matches[ $post_id ]['meta'][] = array(
+			'key'    => (string) $row['meta_key'],
+			'sample' => (string) $row['sample'],
+		);
+	}
+
+	return array_values( $matches );
+}
+
+/**
+ * List Toolset-owned configuration objects.
+ */
+function mcp_toolset_list_configuration_objects(): array {
+	$toolset_post_types = array( 'view', 'view-template', 'cred-form', 'cred-user-form', 'cred_rel_form', 'wp-types-group', 'wp-types-user-group', 'wp-types-term-group' );
+	$objects = array();
+
+	foreach ( $toolset_post_types as $post_type ) {
+		$posts = get_posts(
+			array(
+				'post_type'      => $post_type,
+				'post_status'    => 'any',
+				'posts_per_page' => 500,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'no_found_rows'  => true,
+			)
+		);
+
+		foreach ( $posts as $post ) {
+			$objects[] = mcp_toolset_format_usage_post( (int) $post->ID, $post->post_type, $post->post_status );
+		}
+	}
+
+	return $objects;
+}
+
+/**
+ * Audit Toolset usage across content, meta, and Toolset configuration objects.
+ */
+function mcp_toolset_audit_usage( array $input = array() ): array {
+	$limit = isset( $input['limit'] ) ? absint( $input['limit'] ) : 500;
+	$limit = max( 1, min( 2000, $limit ) );
+	$statuses = mcp_toolset_sanitize_audit_statuses( $input['statuses'] ?? array( 'publish' ) );
+	$post_types = mcp_toolset_sanitize_audit_post_types( $input['post_types'] ?? array() );
+	$include_meta = array_key_exists( 'include_meta', $input ) ? (bool) $input['include_meta'] : true;
+
+	$content_matches = mcp_toolset_find_content_usage( $post_types, $statuses, $limit );
+	$meta_matches = $include_meta ? mcp_toolset_find_meta_usage( $post_types, $statuses, $limit ) : array();
+	$toolset_objects = mcp_toolset_list_configuration_objects();
+
+	return array(
+		'success'         => true,
+		'active_plugins'  => array_values(
+			array_filter(
+				(array) get_option( 'active_plugins', array() ),
+				static function ( $plugin ): bool {
+					return false !== strpos( $plugin, 'toolset' ) || false !== strpos( $plugin, 'types/' );
+				}
+			)
+		),
+		'content_matches' => $content_matches,
+		'meta_matches'    => $meta_matches,
+		'toolset_objects' => $toolset_objects,
+		'custom_types'    => is_array( get_option( 'wpcf-custom-types' ) ) ? array_keys( get_option( 'wpcf-custom-types' ) ) : array(),
+		'custom_taxonomies' => is_array( get_option( 'wpcf-custom-taxonomies' ) ) ? array_keys( get_option( 'wpcf-custom-taxonomies' ) ) : array(),
+		'message'         => sprintf(
+			'Found %d content match(es), %d meta match(es), and %d Toolset configuration object(s).',
+			count( $content_matches ),
+			count( $meta_matches ),
+			count( $toolset_objects )
+		),
 	);
 }
 
@@ -3887,6 +4135,78 @@ wp_register_ability(
 		},
 		'permission_callback' => function (): bool {
 			return current_user_can( 'manage_options' );
+		},
+		'meta'                => array(
+			'annotations' => array(
+				'readonly'    => true,
+				'destructive' => false,
+				'idempotent'  => true,
+			),
+			'show_in_rest' => true,
+			'mcp'         => array(
+				'public' => true,
+				'type'   => 'tool',
+			),
+		),
+	)
+);
+
+	// AUDIT TOOLSET USAGE
+wp_register_ability(
+	'toolset/audit-usage',
+	array(
+		'label'               => 'Audit Toolset Usage',
+		'description'         => 'Read-only audit of posts, pages, and Toolset configuration objects that appear to use Toolset blocks, shortcodes, fields, Views, or templates.',
+		'category'            => 'site',
+		'input_schema'        => array(
+			'type'                 => 'object',
+			'properties'           => array(
+				'post_types'   => array(
+					'type'        => 'array',
+					'items'       => array( 'type' => 'string' ),
+					'description' => 'Optional post types to scan. Empty scans all non-attachment content post types.',
+				),
+				'statuses'     => array(
+					'type'        => 'array',
+					'items'       => array(
+						'type' => 'string',
+						'enum' => array( 'publish', 'draft', 'private', 'pending', 'future' ),
+					),
+					'description' => 'Post statuses to scan. Defaults to publish.',
+				),
+				'include_meta' => array(
+					'type'        => 'boolean',
+					'default'     => true,
+					'description' => 'Whether to scan post meta for Toolset markers.',
+				),
+				'limit'        => array(
+					'type'        => 'integer',
+					'default'     => 500,
+					'minimum'     => 1,
+					'maximum'     => 2000,
+					'description' => 'Maximum rows to scan per content/meta query.',
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'       => 'object',
+			'properties' => array(
+				'success'           => array( 'type' => 'boolean' ),
+				'active_plugins'    => array( 'type' => 'array' ),
+				'content_matches'   => array( 'type' => 'array' ),
+				'meta_matches'      => array( 'type' => 'array' ),
+				'toolset_objects'   => array( 'type' => 'array' ),
+				'custom_types'      => array( 'type' => 'array' ),
+				'custom_taxonomies' => array( 'type' => 'array' ),
+				'message'           => array( 'type' => 'string' ),
+			),
+		),
+		'execute_callback'    => function ( array $input = array() ): array {
+			return mcp_toolset_audit_usage( $input );
+		},
+		'permission_callback' => function (): bool {
+			return current_user_can( 'edit_posts' );
 		},
 		'meta'                => array(
 			'annotations' => array(
