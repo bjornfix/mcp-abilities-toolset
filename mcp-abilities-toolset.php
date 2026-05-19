@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Toolset
  * Plugin URI: https://github.com/bjornfix/mcp-abilities-toolset
  * Description: Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -988,6 +988,116 @@ function mcp_toolset_audit_usage( array $input = array() ): array {
 			count( $toolset_objects )
 		),
 	);
+}
+
+/**
+ * Clean stale Toolset runtime data after replacing frontend Toolset usage.
+ */
+function mcp_toolset_cleanup_stale_data( array $input = array() ): array {
+	global $wpdb;
+
+	$dry_run = array_key_exists( 'dry_run', $input ) ? (bool) $input['dry_run'] : true;
+	$delete_meta = ! empty( $input['delete_stale_meta'] );
+	$delete_objects = ! empty( $input['delete_toolset_objects'] );
+	$clean_content = ! empty( $input['clean_toolset_ds_version'] );
+	$limit = isset( $input['limit'] ) ? absint( $input['limit'] ) : 5000;
+	$limit = max( 1, min( 20000, $limit ) );
+
+	$meta_keys = array( '_views_template', '_wpv_contains_gutenberg_views', '_wpv_is_gutenberg_view', '_wpv_layout_settings', '_wpv_settings', '_wpv_view_data', '_wpv_used_in_posts', '_wpv_description', '_toolset_edit_last' );
+	$toolset_post_types = array( 'view', 'view-template', 'cred-form', 'cred-user-form', 'cred_rel_form', 'wp-types-group', 'wp-types-user-group', 'wp-types-term-group' );
+	$result = array(
+		'success'          => true,
+		'dry_run'          => $dry_run,
+		'meta_deleted'     => 0,
+		'objects_deleted'  => 0,
+		'content_cleaned'  => 0,
+		'meta_candidates'  => 0,
+		'object_candidates' => array(),
+		'content_candidates' => array(),
+		'message'          => '',
+	);
+
+	if ( $delete_meta ) {
+		$placeholders = implode( ',', array_fill( 0, count( $meta_keys ), '%s' ) );
+		$count_sql = "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key IN ($placeholders)";
+		$result['meta_candidates'] = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $meta_keys ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		if ( ! $dry_run && $result['meta_candidates'] > 0 ) {
+			$delete_sql = "DELETE FROM {$wpdb->postmeta} WHERE meta_key IN ($placeholders) LIMIT %d";
+			$query_args = array_merge( $meta_keys, array( $limit ) );
+			$wpdb->query( $wpdb->prepare( $delete_sql, $query_args ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
+			$result['meta_deleted'] = (int) $wpdb->rows_affected;
+		}
+	}
+
+	if ( $clean_content ) {
+		$content_posts = get_posts(
+			array(
+				'post_type'      => 'any',
+				'post_status'    => 'any',
+				'posts_per_page' => min( 2000, $limit ),
+				's'              => 'toolsetDSVersion',
+				'no_found_rows'  => true,
+			)
+		);
+
+		foreach ( $content_posts as $post ) {
+			if ( false === strpos( $post->post_content, 'toolsetDSVersion' ) ) {
+				continue;
+			}
+
+			$result['content_candidates'][] = array(
+				'id'     => (int) $post->ID,
+				'title'  => html_entity_decode( get_the_title( $post ), ENT_QUOTES ),
+				'type'   => $post->post_type,
+				'status' => $post->post_status,
+			);
+
+			$cleaned_content = preg_replace( '/,"dynamicAttributes":\{"toolsetDSVersion":"[0-9]+"\}/', '', $post->post_content );
+			$cleaned_content = preg_replace( '/"dynamicAttributes":\{"toolsetDSVersion":"[0-9]+"\},/', '', $cleaned_content );
+			$cleaned_content = preg_replace( '/\{"dynamicAttributes":\{"toolsetDSVersion":"[0-9]+"\}\}/', '{}', $cleaned_content );
+
+			if ( $cleaned_content !== $post->post_content && ! $dry_run ) {
+				wp_update_post(
+					array(
+						'ID'           => (int) $post->ID,
+						'post_content' => $cleaned_content,
+					)
+				);
+				$result['content_cleaned']++;
+			}
+		}
+	}
+
+	if ( $delete_objects ) {
+		foreach ( $toolset_post_types as $post_type ) {
+			$posts = get_posts(
+				array(
+					'post_type'      => $post_type,
+					'post_status'    => 'any',
+					'posts_per_page' => min( 500, $limit ),
+					'no_found_rows'  => true,
+				)
+			);
+
+			foreach ( $posts as $post ) {
+				$result['object_candidates'][] = array(
+					'id'     => (int) $post->ID,
+					'title'  => html_entity_decode( get_the_title( $post ), ENT_QUOTES ),
+					'type'   => $post->post_type,
+					'status' => $post->post_status,
+				);
+
+				if ( ! $dry_run && wp_delete_post( (int) $post->ID, true ) ) {
+					$result['objects_deleted']++;
+				}
+			}
+		}
+	}
+
+	$result['message'] = $dry_run ? 'Dry run completed. No data was changed.' : 'Cleanup completed.';
+
+	return $result;
 }
 
 /**
@@ -4152,76 +4262,151 @@ wp_register_ability(
 );
 
 	// AUDIT TOOLSET USAGE
-wp_register_ability(
-	'toolset/audit-usage',
-	array(
-		'label'               => 'Audit Toolset Usage',
-		'description'         => 'Read-only audit of posts, pages, and Toolset configuration objects that appear to use Toolset blocks, shortcodes, fields, Views, or templates.',
-		'category'            => 'site',
-		'input_schema'        => array(
-			'type'                 => 'object',
-			'properties'           => array(
-				'post_types'   => array(
-					'type'        => 'array',
-					'items'       => array( 'type' => 'string' ),
-					'description' => 'Optional post types to scan. Empty scans all non-attachment content post types.',
-				),
-				'statuses'     => array(
-					'type'        => 'array',
-					'items'       => array(
-						'type' => 'string',
-						'enum' => array( 'publish', 'draft', 'private', 'pending', 'future' ),
+	wp_register_ability(
+		'toolset/audit-usage',
+		array(
+			'label'               => 'Audit Toolset Usage',
+			'description'         => 'Read-only audit of posts, pages, and Toolset configuration objects that appear to use Toolset blocks, shortcodes, fields, Views, or templates.',
+			'category'            => 'site',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'post_types'   => array(
+						'type'        => 'array',
+						'items'       => array( 'type' => 'string' ),
+						'description' => 'Optional post types to scan. Empty scans all non-attachment content post types.',
 					),
-					'description' => 'Post statuses to scan. Defaults to publish.',
+					'statuses'     => array(
+						'type'        => 'array',
+						'items'       => array(
+							'type' => 'string',
+							'enum' => array( 'publish', 'draft', 'private', 'pending', 'future' ),
+						),
+						'description' => 'Post statuses to scan. Defaults to publish.',
+					),
+					'include_meta' => array(
+						'type'        => 'boolean',
+						'default'     => true,
+						'description' => 'Whether to scan post meta for Toolset markers.',
+					),
+					'limit'        => array(
+						'type'        => 'integer',
+						'default'     => 500,
+						'minimum'     => 1,
+						'maximum'     => 2000,
+						'description' => 'Maximum rows to scan per content/meta query.',
+					),
 				),
-				'include_meta' => array(
-					'type'        => 'boolean',
-					'default'     => true,
-					'description' => 'Whether to scan post meta for Toolset markers.',
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'success'           => array( 'type' => 'boolean' ),
+					'active_plugins'    => array( 'type' => 'array' ),
+					'content_matches'   => array( 'type' => 'array' ),
+					'meta_matches'      => array( 'type' => 'array' ),
+					'toolset_objects'   => array( 'type' => 'array' ),
+					'custom_types'      => array( 'type' => 'array' ),
+					'custom_taxonomies' => array( 'type' => 'array' ),
+					'message'           => array( 'type' => 'string' ),
 				),
-				'limit'        => array(
-					'type'        => 'integer',
-					'default'     => 500,
-					'minimum'     => 1,
-					'maximum'     => 2000,
-					'description' => 'Maximum rows to scan per content/meta query.',
+			),
+			'execute_callback'    => function ( array $input = array() ): array {
+				return mcp_toolset_audit_usage( $input );
+			},
+			'permission_callback' => function (): bool {
+				return current_user_can( 'edit_posts' );
+			},
+			'meta'                => array(
+				'annotations' => array(
+					'readonly'    => true,
+					'destructive' => false,
+					'idempotent'  => true,
+				),
+				'show_in_rest' => true,
+				'mcp'         => array(
+					'public' => true,
+					'type'   => 'tool',
 				),
 			),
-			'additionalProperties' => false,
-		),
-		'output_schema'       => array(
-			'type'       => 'object',
-			'properties' => array(
-				'success'           => array( 'type' => 'boolean' ),
-				'active_plugins'    => array( 'type' => 'array' ),
-				'content_matches'   => array( 'type' => 'array' ),
-				'meta_matches'      => array( 'type' => 'array' ),
-				'toolset_objects'   => array( 'type' => 'array' ),
-				'custom_types'      => array( 'type' => 'array' ),
-				'custom_taxonomies' => array( 'type' => 'array' ),
-				'message'           => array( 'type' => 'string' ),
+		)
+	);
+
+	// CLEAN STALE TOOLSET DATA
+	wp_register_ability(
+		'toolset/cleanup-stale-data',
+		array(
+			'label'               => 'Clean Stale Toolset Data',
+			'description'         => 'Destructive cleanup for stale Toolset metadata, Toolset View/configuration posts, and toolsetDSVersion block attributes after frontend usage has been replaced.',
+			'category'            => 'site',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'dry_run'                  => array(
+						'type'        => 'boolean',
+						'default'     => true,
+						'description' => 'Preview cleanup targets without changing data.',
+					),
+					'delete_stale_meta'        => array(
+						'type'        => 'boolean',
+						'default'     => false,
+						'description' => 'Delete known stale Toolset postmeta keys such as _wpv_* and _views_template.',
+					),
+					'delete_toolset_objects'   => array(
+						'type'        => 'boolean',
+						'default'     => false,
+						'description' => 'Permanently delete old Toolset View/template/form/field-group posts.',
+					),
+					'clean_toolset_ds_version' => array(
+						'type'        => 'boolean',
+						'default'     => false,
+						'description' => 'Remove stale toolsetDSVersion block attributes from post content.',
+					),
+					'limit'                    => array(
+						'type'        => 'integer',
+						'default'     => 5000,
+						'minimum'     => 1,
+						'maximum'     => 20000,
+						'description' => 'Maximum cleanup rows/posts per operation.',
+					),
+				),
+				'additionalProperties' => false,
 			),
-		),
-		'execute_callback'    => function ( array $input = array() ): array {
-			return mcp_toolset_audit_usage( $input );
-		},
-		'permission_callback' => function (): bool {
-			return current_user_can( 'edit_posts' );
-		},
-		'meta'                => array(
-			'annotations' => array(
-				'readonly'    => true,
-				'destructive' => false,
-				'idempotent'  => true,
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'success'            => array( 'type' => 'boolean' ),
+					'dry_run'            => array( 'type' => 'boolean' ),
+					'meta_deleted'       => array( 'type' => 'integer' ),
+					'objects_deleted'    => array( 'type' => 'integer' ),
+					'content_cleaned'    => array( 'type' => 'integer' ),
+					'meta_candidates'    => array( 'type' => 'integer' ),
+					'object_candidates'  => array( 'type' => 'array' ),
+					'content_candidates' => array( 'type' => 'array' ),
+					'message'            => array( 'type' => 'string' ),
+				),
 			),
-			'show_in_rest' => true,
-			'mcp'         => array(
-				'public' => true,
-				'type'   => 'tool',
+			'execute_callback'    => function ( array $input = array() ): array {
+				return mcp_toolset_cleanup_stale_data( $input );
+			},
+			'permission_callback' => function (): bool {
+				return current_user_can( 'manage_options' );
+			},
+			'meta'                => array(
+				'annotations' => array(
+					'readonly'    => false,
+					'destructive' => true,
+					'idempotent'  => true,
+				),
+				'show_in_rest' => true,
+				'mcp'         => array(
+					'public' => true,
+					'type'   => 'tool',
+				),
 			),
-		),
-	)
-);
+		)
+	);
 }
 
 

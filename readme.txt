@@ -3,7 +3,7 @@ Contributors: devenia
 Tags: mcp, toolset, types, custom-fields
 Requires at least: 6.9
 Tested up to: 6.9
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,6 +22,7 @@ Part of the MCP Expose Abilities ecosystem.
 - Create, read, update, delete posts with custom fields
 - Manage taxonomy terms
 - Audit pages, posts, and Toolset objects for active Toolset usage
+- Clean stale Toolset metadata and objects after migration
 - Issue tracker specific abilities for managing issues
 
 == Installation ==
@@ -32,6 +33,9 @@ Part of the MCP Expose Abilities ecosystem.
 4. Activate the plugin
 
 == Changelog ==
+
+= 1.0.3 =
+* Added: `toolset/cleanup-stale-data` destructive cleanup ability for stale Toolset metadata, Toolset objects, and `toolsetDSVersion` content attributes after migration
 
 = 1.0.2 =
 * Added: `toolset/audit-usage` read-only ability to find posts/pages with Toolset blocks, shortcodes, fields, Views/templates, and Toolset configuration objects

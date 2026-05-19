@@ -6,7 +6,7 @@ Toolset integration for WordPress via MCP.
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 
 **Tested up to:** 6.9
-**Stable tag:** 1.0.2
+**Stable tag:** 1.0.3
 **Requires PHP:** 8.0
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
@@ -49,7 +49,7 @@ This add-on lets you tell the agent to inspect the model, understand the fields 
 3. Upload via WordPress Admin > Plugins > Add New > Upload Plugin
 4. Activate the plugin
 
-## Abilities (39)
+## Abilities (40)
 
 | Ability | Description |
 |---------|-------------|
@@ -92,6 +92,7 @@ This add-on lets you tell the agent to inspect the model, understand the fields 
 | `toolset/update-field` | Update field definition |
 | `toolset/get-field` | Get field definition |
 | `toolset/audit-usage` | Audit pages, posts, and Toolset objects for active Toolset usage |
+| `toolset/cleanup-stale-data` | Clean stale Toolset metadata, objects, and toolsetDSVersion attributes after migration |
 
 ## Usage Examples
 
@@ -134,6 +135,9 @@ This add-on lets you tell the agent to inspect the model, understand the fields 
 ```
 
 ## Changelog
+
+### 1.0.3
+- Added: `toolset/cleanup-stale-data` destructive cleanup ability for stale Toolset metadata, Toolset objects, and `toolsetDSVersion` content attributes after migration
 
 ### 1.0.2
 - Added: `toolset/audit-usage` read-only ability to find posts/pages with Toolset blocks, shortcodes, fields, Views/templates, and Toolset configuration objects
