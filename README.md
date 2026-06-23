@@ -8,7 +8,7 @@ Toolset abilities for MCP. Manage custom post types, fields, and relationships c
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 1.0.3
+**Stable tag:** 1.0.4
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ Toolset abilities for MCP. Manage custom post types, fields, and relationships c
 
 Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
 
-This plugin is part of the Devenia MCP abilities ecosystem. It gives an MCP-capable agent a focused, authenticated way to work with Toolset work inside WordPress through MCP.
+This plugin is part of the MCP abilities ecosystem. It gives an MCP-capable agent a focused, authenticated way to work with Toolset work inside WordPress through MCP.
 
 **Example:** "Handle this WordPress maintenance task directly." - The agent can inspect the site, call the relevant ability, and return the result without making the human click through wp-admin for every step.
 
@@ -194,6 +194,10 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 
 ## Changelog
 
+### 1.0.4
+- Update tested WordPress version metadata for Plugin Check.
+- Align public release identity with the Basicus author/contributor rule.
+
 ### 1.0.3
 - Added: `toolset/cleanup-stale-data` destructive cleanup ability for stale Toolset metadata, Toolset objects, and `toolsetDSVersion` content attributes after migration
 
@@ -220,7 +224,7 @@ GPL-2.0+
 
 ## Author
 
-[Devenia](https://devenia.com) - We've been doing SEO and web development since 1993.
+[basicus](https://profiles.wordpress.org/basicus/)
 
 ## Links
 

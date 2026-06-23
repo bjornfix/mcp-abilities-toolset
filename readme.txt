@@ -1,9 +1,9 @@
 === MCP Abilities - Toolset ===
-Contributors: devenia
+Contributors: basicus
 Tags: mcp, toolset, types, custom-fields
 Requires at least: 6.9
-Tested up to: 6.9
-Stable tag: 1.0.3
+Tested up to: 7.0
+Stable tag: 1.0.4
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,6 +33,10 @@ Part of the MCP Expose Abilities ecosystem.
 4. Activate the plugin
 
 == Changelog ==
+
+= 1.0.4 =
+* Update tested WordPress version metadata for Plugin Check.
+* Align public release identity with the Basicus author/contributor rule.
 
 = 1.0.3 =
 * Added: `toolset/cleanup-stale-data` destructive cleanup ability for stale Toolset metadata, Toolset objects, and `toolsetDSVersion` content attributes after migration
