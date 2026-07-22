@@ -8,7 +8,7 @@ Toolset abilities for MCP. Manage custom post types, fields, and relationships c
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 1.0.4
+**Stable tag:** 1.0.5
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -193,6 +193,9 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 ```
 
 ## Changelog
+
+### 1.0.5
+- Fixed: Use the WordPress core `user` ability category for all user and role abilities.
 
 ### 1.0.4
 - Update tested WordPress version metadata for Plugin Check.

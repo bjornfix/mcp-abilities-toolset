@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Toolset
  * Plugin URI: https://github.com/bjornfix/mcp-abilities-toolset
  * Description: Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -1631,7 +1631,7 @@ wp_register_ability(
 		array(
 			'label'               => 'Get User Custom Fields',
 			'description'         => 'Get custom fields defined for users.',
-			'category'            => 'site',
+			'category'            => 'user',
 			'input_schema'        => array(
 				'type'          => 'object',
 				'minProperties' => 0,
@@ -1691,7 +1691,7 @@ wp_register_ability(
 		array(
 			'label'               => 'Get User with Custom Fields',
 			'description'         => 'Get a user by ID including custom fields.',
-			'category'            => 'site',
+			'category'            => 'user',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'user_id' ),
@@ -1769,7 +1769,7 @@ wp_register_ability(
 		array(
 			'label'               => 'List Users',
 			'description'         => 'List users with optional filtering.',
-			'category'            => 'site',
+			'category'            => 'user',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -1853,7 +1853,7 @@ wp_register_ability(
 		array(
 			'label'               => 'List User Roles',
 			'description'         => 'List all user roles and their capabilities.',
-			'category'            => 'site',
+			'category'            => 'user',
 			'input_schema'        => array(
 				'type'          => 'object',
 				'minProperties' => 0,
@@ -1910,7 +1910,7 @@ wp_register_ability(
 		array(
 			'label'               => 'Get Role Capabilities',
 			'description'         => 'Get capabilities for a specific role.',
-			'category'            => 'site',
+			'category'            => 'user',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'required'             => array( 'role' ),
@@ -2653,7 +2653,7 @@ wp_register_ability(
 	array(
 		'label'               => 'Get Users By Role',
 		'description'         => 'Get users filtered by role.',
-		'category'            => 'users',
+		'category'            => 'user',
 		'input_schema'        => array(
 			'type'                 => 'object',
 			'required'             => array( 'role' ),
@@ -4054,7 +4054,7 @@ wp_register_ability(
 	array(
 		'label'               => 'Get User Capabilities',
 		'description'         => 'Get all capabilities for a specific user.',
-		'category'            => 'site',
+		'category'            => 'user',
 		'input_schema'        => array(
 			'type'          => 'object',
 			'properties'    => array(

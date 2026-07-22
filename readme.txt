@@ -3,7 +3,7 @@ Contributors: basicus
 Tags: mcp, toolset, types, custom-fields
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,6 +33,9 @@ Part of the MCP Expose Abilities ecosystem.
 4. Activate the plugin
 
 == Changelog ==
+
+= 1.0.5 =
+* Fixed: Use the WordPress core `user` ability category for all user and role abilities.
 
 = 1.0.4 =
 * Update tested WordPress version metadata for Plugin Check.
