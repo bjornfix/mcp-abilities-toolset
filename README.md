@@ -2,7 +2,7 @@
 
 Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
 
-[![GitHub release](https://img.shields.io/github/v/release/bjornfix/mcp-abilities-toolset)](https://github.com/bjornfix/mcp-abilities-toolset/releases)
+[![Release 1.0.5](https://img.shields.io/badge/release-1.0.5-blue.svg)](https://downloads.devenia.com/mcp-abilities-toolset.zip)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 [![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
@@ -86,7 +86,7 @@ It is especially useful when the manual version is repetitive enough that import
 Start with the main plugin page and base stack documentation:
 
 - [MCP Expose Abilities](https://devenia.com/plugins/mcp-expose-abilities/)
-- [Plugin Page](https://devenia.com/plugins/mcp-expose-abilities/#add-ons)
+- [Plugin page](https://devenia.com/plugins/mcp-abilities-toolset/)
 - [Getting Started](https://github.com/bjornfix/mcp-expose-abilities/wiki/Getting-Started)
 - [Install Order and Dependencies](https://github.com/bjornfix/mcp-expose-abilities/wiki/Install-Order-and-Dependencies)
 
