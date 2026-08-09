@@ -12,6 +12,29 @@ Toolset abilities for MCP. Manage custom post types, fields, and relationships c
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
+## Reader workflows
+
+The 40 registered abilities form seven reader workflows:
+
+- Content structures (8): inspect post types, their fields and taxonomies, list taxonomies, create or delete a custom post type, and create or delete a custom taxonomy.
+- Content records and terms (8): create, inspect, list, query, update, trash, or permanently delete selected posts, and list or create taxonomy terms.
+- Fields and field groups (5): inspect fields and field groups, create or update a field group, and create or update a field definition.
+- Post relationships (5): inspect registered and post-specific relationships, create a relationship, link two selected posts, and retrieve related posts.
+- Users and access (8): inspect Toolset user fields, users, roles, role capabilities, users by role, one user's capabilities, and the current user's access to a requested action.
+- Toolset presentation controls (4): list Toolset forms and Views, inspect taxonomy editor controls, and select the taxonomy editor control for one post type.
+- Migration audit and cleanup (2): audit active Toolset use across content and configuration, then preview or explicitly clean stale Toolset metadata, objects, and content attributes after a migration.
+
+## Authorization and change boundaries
+
+- Every operation requires an authenticated WordPress user and the capability assigned to that operation. Content work requires the relevant edit or delete capability, taxonomy term creation requires `manage_categories`, user inspection requires `list_users`, and Toolset structure changes require `manage_options`.
+- A post deletion targets one exact post. The default moves it to trash; permanent deletion happens only when the caller explicitly enables `force`.
+- Deleting a Toolset post type processes every post of that type. Deleting a Toolset taxonomy deletes its terms. Both require the exact registered name and administrator permission.
+- The stale-data cleanup defaults to a dry run. Its three mutation scopes default to off, the caller must enable each intended scope, and every run has an explicit bounded limit.
+- Relationship changes require an exact relationship and exact post IDs. Field, group, post type, taxonomy, and taxonomy editor changes require their exact source-owned identifiers.
+- The audit is read-only and reports content markers, metadata markers, and Toolset configuration objects so cleanup can be based on observed use rather than assumption.
+
+[Download MCP Abilities - Toolset](https://downloads.devenia.com/mcp-abilities-toolset.zip)
+
 ## What It Does
 
 Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
