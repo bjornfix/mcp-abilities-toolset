@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Toolset
  * Plugin URI: https://github.com/bjornfix/mcp-abilities-toolset
  * Description: Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
- * Version: 1.0.5
+ * Version: 1.0.7
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -20,6 +20,9 @@ declare( strict_types=1 );
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+require_once __DIR__ . '/includes/devenia-updater-notice.php';
+mcp_abilities_toolset_Updater_Notice::register( __FILE__ );
 
 /**
  * Check if Abilities API is available.

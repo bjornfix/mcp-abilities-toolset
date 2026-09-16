@@ -3,7 +3,7 @@ Contributors: basicus
 Tags: mcp, toolset, types, custom-fields
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.0.5
+Stable tag: 1.0.7
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -27,12 +27,17 @@ Part of the MCP Expose Abilities ecosystem.
 
 == Installation ==
 
+For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
+
 1. Install the required plugins (Abilities API, MCP Adapter)
 2. Configure Toolset (Types, Views) as needed
 3. Download and install this plugin
 4. Activate the plugin
 
 == Changelog ==
+
+= 1.0.7 =
+* Add one dismissible Plugins-screen reminder when Devenia MCP Updater is missing or inactive, with persistent install or activate links. Automatic updates remain your choice in WordPress.
 
 = 1.0.5 =
 * Fixed: Use the WordPress core `user` ability category for all user and role abilities.
