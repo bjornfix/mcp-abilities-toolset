@@ -2,8 +2,8 @@
 Contributors: basicus
 Tags: mcp, toolset, types, custom-fields
 Requires at least: 6.9
-Tested up to: 7.0
-Stable tag: 1.0.7
+Tested up to: 7.1
+Stable tag: 1.0.8
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,7 +36,7 @@ For update notifications in WordPress, install [Devenia MCP Updater](https://dow
 
 == Changelog ==
 
-= 1.0.7 =
+= 1.0.8 =
 * Add one dismissible Plugins-screen reminder when Devenia MCP Updater is missing or inactive, with persistent install or activate links. Automatic updates remain your choice in WordPress.
 
 = 1.0.5 =

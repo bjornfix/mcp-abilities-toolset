@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Toolset
  * Plugin URI: https://github.com/bjornfix/mcp-abilities-toolset
  * Description: Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+

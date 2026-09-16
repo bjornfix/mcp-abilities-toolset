@@ -2,13 +2,13 @@
 
 Toolset abilities for MCP. Manage custom post types, fields, and relationships created with Toolset.
 
-[![Release 1.0.7](https://img.shields.io/badge/release-1.0.7-blue.svg)](https://downloads.devenia.com/mcp-abilities-toolset.zip)
+[![Release 1.0.8](https://img.shields.io/badge/release-1.0.8-blue.svg)](https://downloads.devenia.com/mcp-abilities-toolset.zip)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 [![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
-**Tested up to:** 7.0
-**Stable tag:** 1.0.7
+**Tested up to:** 7.1
+**Stable tag:** 1.0.8
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -218,7 +218,7 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 ## Changelog
 
 
-### 1.0.7
+### 1.0.8
 
 Add one dismissible Plugins-screen reminder when Devenia MCP Updater is missing or inactive, with persistent install or activate links. Automatic updates remain your choice in WordPress.
 
